@@ -3,6 +3,8 @@ const validator = require('validator');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
+const crypto = require('crypto'); //default nodeJS package: no need to explicitly download
+
 const userSchema = new mongoose.Schema({
 	name: {
 		type: String,
@@ -52,20 +54,44 @@ userSchema.pre('save', async function (next) {
 	if (!(this.isModified('password'))) //if we dont specify this evrytime there is a change in the schema of a user (ex changing the role from 'user' to 'manager', this function of encryption will run)
 		return next();
 
-	this.password = await bcrypt(this.password, 10);
+	this.password = await bcrypt.hash(this.password, 10);
+});
 
-	//validate the password with passed on user password
-	userSchema.methods.isValidatedPassword = async function (userSendPassword) {
-		return await bcrypt.compare(userSendPassword, this.password);
-	};
+//validate the password with passed on user password
+userSchema.methods.isValidatedPassword = async function (userSendPassword) {
+	return await bcrypt.compare(userSendPassword, this.password);
+};
 
-	//create and return jwt token
-	userSchema.methods.getJwtToken = async function () {
-		return jwt.sign(
-			{ id: this._id },
-			process.env.JWT_SECRET,
-			{ expiresIn: process.env.JWT_EXPIRY }
-		);
-	};
+//create and return jwt token
+userSchema.methods.getJwtToken = function () {
+	return jwt.sign(
+		{ id: this._id },
+		process.env.JWT_SECRET,
+		{ expiresIn: process.env.JWT_EXPIRY }
+	);
+};
 
-	module.exports = mongoose.model(User, userSchema);
+//create forgot password token (not actually a token but just a string)
+userSchema.methods.getForgotPasswordToken = function () {
+	//generate a long and generate random string
+	const forgotToken = crypto.randomBytes(20).toString('hex');
+
+	// this.forgotPasswordToken = forgotToken : storing "forgotToken" to db
+
+	//getting a hash - make sure to get a hash on backend : no need but PRO Backend DEVELOPER C'mon..
+	this.forgotPasswordToken = crypto
+		.createHash('sha256')
+		.update(forgotToken)
+		.digest('hex');
+
+	//Hitesh sir's way of tokenising : we are storing the cryptic hash value of the "forgotToken" here, but we will send the "forgotToken" to the user, so whatever user sends me to backend we will have again run the exact same function on it and then compare
+
+	//time of token
+	this.forgotPasswordExpiry = Date.now() + 20 * 1000 * 60; //20 mins from generation
+
+	return forgotToken;
+
+	//CAUTION : we have assigned values to forgotPasswordToken & forgotPasswordExpiry but they are not saved to db yet..so when we call this function we have to save it
+};
+
+module.exports = mongoose.model('User', userSchema);
