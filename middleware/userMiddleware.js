@@ -18,3 +18,16 @@ exports.isLoggedIn = BigPromise(async (req, res, next) => {
 
 	next();
 });
+
+exports.customRole = (...role) => { //this method accepts the array , although we will be passing only one role "admin"/"manager" but taking it as an array allows us to use the JS array funcationalities
+
+	return (req, res, next) => {
+		//simply checking if user.role === 'admin' or not
+		if (!role.includes(req.user.role)) {
+			return next(new customError('You are not allowed for this resource', 401));
+		}
+		next();
+
+		// if (req.user.role === 'admin'){...}
+	};
+};
