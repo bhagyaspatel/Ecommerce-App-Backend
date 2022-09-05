@@ -36,6 +36,11 @@ const productSchema = new mongoose.Schema({
 			message: "Please select category ONLY from : t-shirts from short-sleeve, long-sleeve, sweat-shirts, hoodies"
 		}
 	},
+	//stock updation is handeled in order controller in adminUpdateOrder
+	stock: {
+		type: Number,
+		require: true
+	},
 	brand: {
 		type: String,
 		require: [true, 'Please add a brand of clothing']

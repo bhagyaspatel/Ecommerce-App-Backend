@@ -1,7 +1,8 @@
 const BigPromise = require("../middleware/bigPromise");
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const razorpay = require('stripe')(process.env.STRIPE_SECRET_KEY);
-const nanoid = require('nanoid'); //generates random strings
+const { nanoid } = import("nanoid");; //generates random strings
+// import { nanoid } from 'nanoid';
 
 exports.sendStripeKey = BigPromise(async (req, res, next) => {
 	res.status(200).json({
