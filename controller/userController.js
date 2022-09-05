@@ -161,7 +161,8 @@ exports.passwordReset = BigPromise(async (req, res, next) => {
 exports.getLoggedInUserDetails = BigPromise(async (req, res, next) => {
 	//to access the req.user we need to inject the middleware isLoggedIn (in user routes) where we have initialized this req.user property 
 	const user = await User.findById(req.user.id);
-
+	console.log(req.user);
+	console.log(req.user.id);
 	res.status(200).json({
 		success: true,
 		user
